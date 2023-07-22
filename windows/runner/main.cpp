@@ -1,4 +1,4 @@
-#include <flutter/dart_project.h>
+﻿#include <flutter/dart_project.h>
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
 
@@ -25,9 +25,27 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
   FlutterWindow window(project);
-  Win32Window::Point origin(10, 10);
-  Win32Window::Size size(1280, 720);
-  if (!window.Create(L"health_care_alarm", origin, size)) {
+  //Win32Window::Point origin(256, 256);
+  //Win32Window::Size size(300, 512);
+
+  //设置窗口大小和居中（开始）+++++++++++++++++++
+  UINT windowWidth = 300, windowHeight = 512;
+  UINT scrWidth, scrHeight, xShaft, yShaft;
+
+  //屏幕宽高的分辨率
+  scrWidth = GetSystemMetrics(SM_CXFULLSCREEN);
+  scrHeight = GetSystemMetrics(SM_CYFULLSCREEN);
+
+  //计算居中时的原点坐标
+  xShaft = (scrWidth - windowWidth) / 2;
+  yShaft = (scrHeight - windowHeight) / 2;
+
+  //设置窗口原点和宽高
+  Win32Window::Point origin(xShaft, yShaft);
+  Win32Window::Size size(windowWidth, windowHeight);
+  //设置窗口大小和居中（结束）----------------------
+
+  if (!window.Create(L"健康时钟", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);
