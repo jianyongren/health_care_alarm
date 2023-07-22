@@ -113,14 +113,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.5"
-  elegant_notification:
-    dependency: "direct dev"
-    description:
-      name: elegant_notification
-      sha256: bcc9344c63391f938a7bc70622e1c8c36c7368e3f676004dc59918cc5adc0820
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.10.1"
   fake_async:
     dependency: transitive
     description:
@@ -200,6 +192,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.1"
+  local_notifier:
+    dependency: "direct dev"
+    description:
+      name: local_notifier
+      sha256: cc855aa6362c8840e3d3b35b1c3b058a3a8becdb2b03d5a9aa3f3a1e861f0a03
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.5"
   matcher:
     dependency: transitive
     description:

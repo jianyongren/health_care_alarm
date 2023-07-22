@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:elegant_notification/elegant_notification.dart';
+import 'package:health_care_alarm/timer.dart';
+import 'package:local_notifier/local_notifier.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,40 +16,16 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: '健康时钟'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -57,23 +34,14 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-  AudioPlayer? _player = null;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
+  AudioPlayer? _player;
+  bool _isStart = false;
+  bool _isSitting = true;
+  final int _sittingMinutes = 2;
+  final _standMinutes = 1;
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -81,36 +49,98 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
+            const SizedBox(
+              height: 20,
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            TimerWidget(
+              seconds: _isStart
+                  ? (_isSitting ? _sittingMinutes * 60 : _standMinutes * 60)
+                  : 0,
+              callback: _taskDone,
+            ),
+            const SizedBox(
+              height: 20,
             ),
             OutlinedButton(
-                onPressed: () {
-                  _playAlarmMusic();
-                },
-                child: const Text('播放铃声')),
+                onPressed: _sittingTask,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.circle,
+                      color: _isSitting && _isStart ? Colors.red : Colors.grey,
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    Text('坐姿开始'),
+                  ],
+                )),
+            const SizedBox(
+              height: 10,
+            ),
             OutlinedButton(
-                onPressed: () {
-                  _stopAlarmMusic();
-                },
-                child: const Text('停止播放'))
+                onPressed: _standTask,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.circle,
+                      color: _isStart && !_isSitting ? Colors.red : Colors.grey,
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    Text('站姿开始'),
+                  ],
+                )),
+            const SizedBox(
+              height: 10,
+            ),
+            TextButton(onPressed: _stopAll, child: const Text('结束')),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 
+  void _sittingTask() {
+    setState(() {
+      _isSitting = true;
+      _isStart = true;
+    });
+  }
+
+  void _standTask() {
+    setState(() {
+      _isSitting = false;
+      _isStart = true;
+    });
+  }
+
+  void _stopAll() {
+    setState(() {
+      _isStart = false;
+      _stopAlarmMusic();
+    });
+  }
+
+  void _continueNextTask() {
+    _stopAlarmMusic();
+    if (_isSitting) {
+      _standTask();
+    } else {
+      _sittingTask();
+    }
+  }
+
+  //参考资料：https://blog.csdn.net/yikezhuixun/article/details/130660544
   void _playAlarmMusic() async {
     if (_player == null) {
       AudioPlayer player = AudioPlayer();
@@ -127,6 +157,59 @@ class _MyHomePageState extends State<MyHomePage> {
       _player?.dispose();
       _player = null;
     }
+  }
+
+  void _taskDone() {
+    _playAlarmMusic();
+    _notify();
+  }
+
+  ///参考资料：https://juejin.cn/post/7074482758747160590
+  void _notify() async {
+    // Add in main method.
+    await localNotifier.setup(
+      appName: '健康时钟',
+      // The parameter shortcutPolicy only works on Windows
+      shortcutPolicy: ShortcutPolicy.requireCreate,
+    );
+
+    LocalNotification notification = LocalNotification(
+        title: _isSitting ? "【坐】姿时间结束" : "【站】姿时间结束",
+        // body: _isSitting ? "坐姿时间结束" : "站立结束",
+        actions: [
+          LocalNotificationAction(text: '继续'),
+          LocalNotificationAction(text: '停止'),
+        ]);
+    notification.onShow = () {
+      print('onShow ${notification.identifier}');
+    };
+    notification.onClose = (closeReason) {
+      // Only supported on windows, other platforms closeReason is always unknown.
+      switch (closeReason) {
+        case LocalNotificationCloseReason.userCanceled:
+          _stopAll();
+          break;
+        case LocalNotificationCloseReason.timedOut:
+          // do something
+          break;
+        default:
+      }
+      print('onClose - $closeReason');
+    };
+    notification.onClick = () {
+      print('onClick ${notification.identifier}');
+      _continueNextTask();
+    };
+    notification.onClickAction = (actionIndex) {
+      print('onClickAction ${notification.identifier} - $actionIndex');
+      if (actionIndex == 0) {
+        _continueNextTask();
+      } else {
+        _stopAll();
+      }
+    };
+
+    notification.show();
   }
 
   @override
