@@ -4,4 +4,4 @@
 
 支持Windows和MacOS系统。
 
-[效果图](https://raw.githubusercontent.com/jianyongren/health_care_alarm/master/docs/images/img_app.png)
+![效果图](docs/images/img_app.png)
