@@ -4,4 +4,5 @@
 
 支持Windows和MacOS系统。
 
-![效果图](docs/images/img_app.png)
+![APP效果图](docs/images/img_app.png)
+![系统消息效果图](docs/images/img_message.png)
