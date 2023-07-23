@@ -103,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     const SizedBox(
                       width: 8,
                     ),
-                    Text(_isSitting && _isStart ? '坐姿结束' : '坐姿开始'),
+                    const Text('坐姿计时'),
                   ],
                 )),
             const SizedBox(
@@ -129,7 +129,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     const SizedBox(
                       width: 8,
                     ),
-                    Text(_isStart && !_isSitting ? '站姿结束' : '站姿开始'),
+                    const Text('站姿计时'),
                   ],
                 )),
             const SizedBox(
