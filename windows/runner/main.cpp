@@ -29,6 +29,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   //Win32Window::Size size(300, 512);
 
   //设置窗口大小和居中（开始）+++++++++++++++++++
+  //参考：https://juejin.cn/post/7107484261669666823
   UINT windowWidth = 300, windowHeight = 512;
   UINT scrWidth, scrHeight, xShaft, yShaft;
 

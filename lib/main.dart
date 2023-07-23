@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
 import 'package:health_care_alarm/timer.dart';
 import 'package:local_notifier/local_notifier.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,12 +35,29 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+const String _prefSittingMinutesName = 'sitting_minutes';
+const String _prefStandingMinutesName = 'standing_minutes';
+
 class _MyHomePageState extends State<MyHomePage> {
   AudioPlayer? _player;
   bool _isStart = false;
   bool _isSitting = true;
-  final int _sittingMinutes = 2;
-  final _standMinutes = 1;
+  int _sittingMinutes = 30;
+  int _standMinutes = 15;
+  SharedPreferences? _prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    SharedPreferences.getInstance().then((prefs) {
+      setState(() {
+        _prefs = prefs;
+        _sittingMinutes =
+            prefs.getInt(_prefSittingMinutesName) ?? _sittingMinutes;
+        _standMinutes = prefs.getInt(_prefStandingMinutesName) ?? _standMinutes;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -64,46 +83,85 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 20,
             ),
             OutlinedButton(
-                onPressed: _sittingTask,
+                onPressed: () {
+                  if (_isStart && _isSitting) {
+                    _stopAll();
+                  } else {
+                    _sittingTask();
+                  }
+                },
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.circle,
+                      _isSitting && _isStart ? Icons.pause : Icons.play_arrow,
                       color: _isSitting && _isStart ? Colors.red : Colors.grey,
                     ),
                     const SizedBox(
                       width: 8,
                     ),
-                    Text('坐姿开始'),
+                    Text(_isSitting && _isStart ? '坐姿结束' : '坐姿开始'),
                   ],
                 )),
             const SizedBox(
               height: 10,
             ),
             OutlinedButton(
-                onPressed: _standTask,
+                onPressed: () {
+                  if (_isStart && !_isSitting) {
+                    _stopAll();
+                  } else {
+                    _standTask();
+                  }
+                },
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.circle,
+                      _isStart && !_isSitting ? Icons.pause : Icons.play_arrow,
                       color: _isStart && !_isSitting ? Colors.red : Colors.grey,
                     ),
                     const SizedBox(
                       width: 8,
                     ),
-                    Text('站姿开始'),
+                    Text(_isStart && !_isSitting ? '站姿结束' : '站姿开始'),
                   ],
                 )),
             const SizedBox(
               height: 10,
             ),
-            TextButton(onPressed: _stopAll, child: const Text('结束')),
+            const SizedBox(
+              height: 10,
+            ),
+            _NumberInputWidget(
+              title: '坐姿时间',
+              units: '分钟',
+              defaultValue: _sittingMinutes,
+              listener: (value) {
+                if (value > 0) {
+                  _sittingMinutes = value;
+                  _prefs?.setInt(_prefSittingMinutesName, value);
+                }
+              },
+            ),
+            _NumberInputWidget(
+              title: '站姿时间',
+              units: '分钟',
+              defaultValue: _standMinutes,
+              listener: (value) {
+                if (value > 0) {
+                  _standMinutes = value;
+                  _prefs?.setInt(_prefStandingMinutesName, value);
+                }
+              },
+            ),
+            const SizedBox(
+              height: 10,
+            ),
           ],
         ),
       ),
@@ -216,5 +274,72 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     _stopAlarmMusic();
     super.dispose();
+  }
+}
+
+class _NumberInputWidget extends StatefulWidget {
+  const _NumberInputWidget(
+      {required this.title,
+      required this.defaultValue,
+      required this.listener,
+      required this.units});
+
+  final String title;
+  final int defaultValue;
+  final ValueChanged<int> listener;
+  final String? units;
+
+  @override
+  State<StatefulWidget> createState() => _NumberInputWidgetState();
+}
+
+class _NumberInputWidgetState extends State<_NumberInputWidget> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.defaultValue.toString());
+  }
+
+  @override
+  void didUpdateWidget(covariant _NumberInputWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.defaultValue != widget.defaultValue) {
+      _controller.text = widget.defaultValue.toString();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text('${widget.title} : '),
+        SizedBox(
+          width: 30,
+          child: TextField(
+            textAlign: TextAlign.end,
+            controller: _controller,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: const InputDecoration(
+              isDense: true,
+            ),
+            onChanged: (value) {
+              widget.listener.call(int.parse(value));
+            },
+          ),
+        ),
+        if (widget.units != null) Text(widget.units.toString()),
+      ],
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
   }
 }

@@ -63,6 +63,7 @@ class TimerWidgetState extends State<TimerWidget> {
           child: CircularProgressIndicator(
             value: widget.seconds > 0 ? _process / widget.seconds : 0,
             backgroundColor: Colors.grey,
+            strokeWidth: 8,
           ),
         ),
         Text(
