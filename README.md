@@ -1,16 +1,7 @@
-# health_care_alarm
+# 健康坐姿时间管理
 
-A new Flutter project.
+可以设置坐姿时间和站姿时间，到时间后会响铃并弹出系统通知。
 
-## Getting Started
+支持Windows和MacOS系统。
 
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+[效果图](https://raw.githubusercontent.com/jianyongren/health_care_alarm/master/docs/images/img_app.png)
