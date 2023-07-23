@@ -262,8 +262,8 @@ class _MyHomePageState extends State<MyHomePage> {
         title: _isSitting ? "【坐】姿时间结束" : "【站】姿时间结束",
         // body: _isSitting ? "坐姿时间结束" : "站立结束",
         actions: [
-          LocalNotificationAction(text: '继续'),
-          LocalNotificationAction(text: '停止'),
+          LocalNotificationAction(text: _isSitting ? '切换站姿' : '切换坐姿'),
+          LocalNotificationAction(text: '停止计时'),
         ]);
     notification.onShow = () {
       print('onShow ${notification.identifier}');
