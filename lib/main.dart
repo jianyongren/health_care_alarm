@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
+import 'package:health_care_alarm/settings.dart';
 import 'package:health_care_alarm/timer.dart';
 import 'package:local_notifier/local_notifier.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,29 +35,22 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-const String _prefSittingMinutesName = 'sitting_minutes';
-const String _prefStandingMinutesName = 'standing_minutes';
-const String _prefEnableBellName = 'enable_bell';
-
 class _MyHomePageState extends State<MyHomePage> {
   AudioPlayer? _player;
   bool _isStart = false;
   bool _isSitting = true;
   int _sittingMinutes = 30;
   int _standMinutes = 15;
-  SharedPreferences? _prefs;
-  bool _enableBell = true;
+  int _bellSeconds = 30;
 
   @override
   void initState() {
     super.initState();
-    SharedPreferences.getInstance().then((prefs) {
+    GlobalSettings.instance.init().then((value) {
       setState(() {
-        _prefs = prefs;
-        _sittingMinutes =
-            prefs.getInt(_prefSittingMinutesName) ?? _sittingMinutes;
-        _standMinutes = prefs.getInt(_prefStandingMinutesName) ?? _standMinutes;
-        _enableBell = prefs.getBool(_prefEnableBellName) ?? true;
+        _sittingMinutes = GlobalSettings.instance.sitingMinutes;
+        _standMinutes = GlobalSettings.instance.standMinutes;
+        _bellSeconds = GlobalSettings.instance.ringSeconds;
       });
     });
   }
@@ -145,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> {
               listener: (value) {
                 if (value > 0) {
                   _sittingMinutes = value;
-                  _prefs?.setInt(_prefSittingMinutesName, value);
+                  GlobalSettings.instance.sitingMinutes = value;
                 }
               },
             ),
@@ -156,35 +149,23 @@ class _MyHomePageState extends State<MyHomePage> {
               listener: (value) {
                 if (value > 0) {
                   _standMinutes = value;
-                  _prefs?.setInt(_prefStandingMinutesName, value);
+                  GlobalSettings.instance.standMinutes = value;
                 }
               },
             ),
             const SizedBox(
               height: 10,
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Text(
-                  '启用铃声',
-                ),
-                const SizedBox(
-                  width: 10,
-                ),
-                Checkbox(
-                    value: _enableBell,
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _enableBell = value;
-                          _prefs?.setBool(_prefEnableBellName, value);
-                        });
-                      }
-                    }),
-              ],
+            _NumberInputWidget(
+              title: '响铃时长',
+              units: '秒',
+              defaultValue: _bellSeconds,
+              listener: (value) {
+                if (value > 0) {
+                  _bellSeconds = value;
+                  GlobalSettings.instance.ringSeconds = value;
+                }
+              },
             ),
           ],
         ),
@@ -224,13 +205,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   //参考资料：https://blog.csdn.net/yikezhuixun/article/details/130660544
   void _playAlarmMusic() async {
-    if (_enableBell && _player == null) {
+    if (_bellSeconds > 0 && _player == null) {
       AudioPlayer player = AudioPlayer();
       _player = player;
       await player.setSource(AssetSource('alarm_music.mp3'));
       player.setReleaseMode(ReleaseMode.loop);
       await player.resume();
-      Future.delayed(const Duration(minutes: 2), () {
+      Future.delayed(Duration(seconds: _bellSeconds), () {
         _stopAlarmMusic();
       });
     }
@@ -356,6 +337,7 @@ class _NumberInputWidgetState extends State<_NumberInputWidget> {
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: const InputDecoration(
               isDense: true,
+              contentPadding: EdgeInsets.only(bottom: 4),
             ),
             onChanged: (value) {
               widget.listener.call(int.parse(value));
