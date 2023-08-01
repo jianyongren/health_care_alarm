@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:health_care_alarm/settings.dart';
 import 'package:health_care_alarm/timer.dart';
 import 'package:local_notifier/local_notifier.dart';
+// import 'package:window_manager/window_manager.dart';
 
 void main() {
   runApp(const MyApp());
@@ -42,6 +43,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int _sittingMinutes = 30;
   int _standMinutes = 15;
   int _bellSeconds = 30;
+  LocalNotification? _notification;
 
   @override
   void initState() {
@@ -161,7 +163,7 @@ class _MyHomePageState extends State<MyHomePage> {
               units: '秒',
               defaultValue: _bellSeconds,
               listener: (value) {
-                if (value > 0) {
+                if (value >= 0) {
                   _bellSeconds = value;
                   GlobalSettings.instance.ringSeconds = value;
                 }
@@ -251,6 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
     };
     notification.onClose = (closeReason) {
       // Only supported on windows, other platforms closeReason is always unknown.
+      _closeNotification();
       switch (closeReason) {
         case LocalNotificationCloseReason.userCanceled:
           _stopAll();
@@ -279,6 +282,14 @@ class _MyHomePageState extends State<MyHomePage> {
     };
 
     notification.show();
+    _notification = notification;
+  }
+
+  void _closeNotification() {
+    if (_notification != null) {
+      localNotifier.close(_notification!);
+      _notification = null;
+    }
   }
 
   @override

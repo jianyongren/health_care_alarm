@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String _prefSittingMinutesName = 'sitting_minutes';
@@ -13,6 +14,9 @@ class GlobalSettings {
   static GlobalSettings get instance => _instance;
 
   Future<void> init() async {
+    if (kDebugMode) {
+      SharedPreferences.setPrefix('debug.');
+    }
     _preferences = await SharedPreferences.getInstance();
   }
 
