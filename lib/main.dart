@@ -251,22 +251,22 @@ class _MyHomePageState extends State<MyHomePage> {
     notification.onShow = () {
       print('onShow ${notification.identifier}');
     };
-    notification.onClose = (closeReason) {
+    notification.onClose = (closeReason) async {
       // Only supported on windows, other platforms closeReason is always unknown.
-      _closeNotification();
       switch (closeReason) {
         case LocalNotificationCloseReason.userCanceled:
+          await _closeNotification();
           _stopAll();
           break;
         case LocalNotificationCloseReason.timedOut:
-          // do something
+          await _closeNotification();
           if (_isStart) {
             _notify();
           }
           break;
         default:
       }
-      print('onClose - $closeReason');
+      print('onClose - $closeReason, _isStart=$_isStart');
     };
     notification.onClick = () {
       print('onClick ${notification.identifier}');
@@ -285,9 +285,9 @@ class _MyHomePageState extends State<MyHomePage> {
     _notification = notification;
   }
 
-  void _closeNotification() {
+  Future<void> _closeNotification() async {
     if (_notification != null) {
-      localNotifier.close(_notification!);
+      await localNotifier.close(_notification!);
       _notification = null;
     }
   }
