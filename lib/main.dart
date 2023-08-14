@@ -177,6 +177,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _sittingTask() {
     setState(() {
+      _closeNotification();
       _isSitting = true;
       _isStart = true;
     });
@@ -184,6 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _standTask() {
     setState(() {
+      _closeNotification();
       _isSitting = false;
       _isStart = true;
     });
@@ -259,10 +261,10 @@ class _MyHomePageState extends State<MyHomePage> {
           _stopAll();
           break;
         case LocalNotificationCloseReason.timedOut:
-          await _closeNotification();
-          if (_isStart) {
-            _notify();
-          }
+          // await _closeNotification();
+          // if (_isStart) {
+          //   _notify();
+          // }
           break;
         default:
       }
@@ -287,8 +289,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _closeNotification() async {
     if (_notification != null) {
-      await localNotifier.close(_notification!);
+      LocalNotification notification = _notification!;
       _notification = null;
+      await localNotifier.close(notification);
     }
   }
 
